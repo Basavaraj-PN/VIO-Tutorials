@@ -1,8 +1,10 @@
 #include "../include/image_dataset_handler.hpp"
 #include "../include/tick_tock.hpp"
+#include "opencv2/xfeatures2d.hpp"
 #include <chrono>
 #include <iostream>
 #include <opencv2/calib3d.hpp>
+#include <tuple>
 enum Matcher
 {
     bm,
@@ -198,9 +200,20 @@ int main()
     cv::Mat stereo_depth = stereo_to_depth(dataset_handler.first_left_image_, dataset_handler.first_right_image_,
                                            dataset_handler.P0, dataset_handler.P1, Matcher::sgbm, true, true);
 
-    double max_val;
-    cv::minMaxLoc(stereo_depth, nullptr, &max_val);
-    cv::imshow("stereo_depth", stereo_depth / max_val);
-    cv::waitKey(0);
+    // std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature = extract_features(dataset_handler.first_left_image_);
+
+    // std::vector<std::vector<cv::DMatch>> matches = match_features(std::get<0>(feature),  );
+
+    // double max_val;
+    // cv::minMaxLoc(stereo_depth, nullptr, &max_val);
+    // cv::imshow("stereo_depth", stereo_depth / max_val);
+    // cv::waitKey(0);
+    // cv::Mat mask = cv::Mat::zeros(dataset_handler.first_left_image_.size(), CV_8UC1);
+    // int ymax = dataset_handler.first_left_image_.rows;
+    // int xmax = dataset_handler.first_left_image_.cols;
+    // cv::rectangle(mask, cv::Rect(96, 0, xmax - 96, ymax), cv::Scalar(255), cv::FILLED);
+    // cv::imshow("mask", mask(dataset_handler.first_left_image_));
+    // cv::waitKey(0);
+
     return EXIT_SUCCESS;
 }
