@@ -103,6 +103,93 @@ cv::Mat stereo_to_depth(cv::Mat &left_image, cv::Mat &right_image,
     cv::Mat stereo_depth = calculate_depth_map(disparity_map, k_left, k_right, t_left, t_right, rectified);
     return stereo_depth;
 }
+
+std::tuple<std::vector<cv::KeyPoint>, cv::Mat> extract_features(cv::Mat image, std::string detector = "sift", cv::Mat mask = cv::Mat())
+{
+    std::vector<cv::KeyPoint> kp;
+    cv::Mat des;
+
+    if (detector == "sift")
+    {
+        cv::Ptr<cv::Feature2D> det = cv::SIFT::create();
+        det->detectAndCompute(image, mask, kp, des);
+    }
+    else if (detector == "orb")
+    {
+        cv::Ptr<cv::Feature2D> det = cv::ORB::create();
+        det->detectAndCompute(image, mask, kp, des);
+    }
+    else if (detector == "surf")
+    {
+        cv::Ptr<cv::Feature2D> det = cv::xfeatures2d::SURF::create();
+
+        det->detectAndCompute(image, mask, kp, des);
+    }
+
+    return std::make_tuple(kp, des);
+}
+
+cv::Mat mask(cv::Mat image)
+{
+    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
+    int ymax = image.rows;
+    int xmax = image.cols;
+    cv::rectangle(mask, cv::Rect(96, 0, xmax - 96, ymax), cv::Scalar(255), cv::FILLED);
+
+    return mask;
+}
+
+std::vector<std::vector<cv::DMatch>> match_features(cv::Mat des1, cv::Mat des2, std::string matching = "BF", std::string detector = "sift", bool sort = true, int k = 2)
+{
+    std::vector<std::vector<cv::DMatch>> matches;
+    if (matching == "BF")
+    {
+        cv::BFMatcher matcher(cv::NORM_L2, false);
+        if (detector == "sift")
+        {
+            matcher = cv::BFMatcher(cv::NORM_L2, false);
+        }
+        else if (detector == "orb")
+        {
+            matcher = cv::BFMatcher(cv::NORM_HAMMING2, false);
+        }
+        matcher.knnMatch(des1, des2, matches, k);
+    }
+    else if (matching == "FLANN")
+    {
+        cv::FlannBasedMatcher matcher;
+        matcher.knnMatch(des1, des2, matches, k);
+    }
+
+    if (sort)
+    {
+        std::sort(matches.begin(), matches.end(), [](std::vector<cv::DMatch> a, std::vector<cv::DMatch> b)
+                  { return a[0].distance < b[0].distance; });
+    }
+
+    return matches;
+}
+
+std::vector<cv::DMatch>
+filter_matches_distance(std::vector<std::vector<cv::DMatch>> matches, float dist_threshold)
+{
+    std::vector<cv::DMatch> filtered_match;
+    for (int i = 0; i < matches.size(); i++)
+    {
+        if (matches[i][0].distance <= dist_threshold * matches[i][1].distance)
+        {
+            filtered_match.push_back(matches[i][0]);
+        }
+    }
+    return filtered_match;
+}
+
+cv::Mat visualize_matches(cv::Mat image1, std::vector<cv::KeyPoint> kp1, cv::Mat image2, std::vector<cv::KeyPoint> kp2, std::vector<cv::DMatch> match)
+{
+    cv::Mat image_matches;
+    cv::drawMatches(image1, kp1, image2, kp2, match, image_matches, cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+    return image_matches;
+}
 int main()
 {
     const std::string dataset_path = "/media/omnipotent/HDD/Dataset/data_odometry_gray/dataset";
