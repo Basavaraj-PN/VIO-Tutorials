@@ -19,6 +19,8 @@ public:
     bool pathExists(const std::string &path);
     void getProjectionMatrix(const std::string projection, cv::Matx34d &matrix);
     void getTranslationMatrix(const std::string projection, cv::Matx34d &matrix);
+    std::pair<cv::Mat, cv::Mat> operator++();
+     std::pair<cv::Mat, cv::Mat> nextFrame();
 
 public:
     cv::Matx34d P0, P1;
@@ -28,6 +30,7 @@ public:
     uint32_t num_frames_;
     int img_height_;
     int img_width_;
+    int current_frame_ = -1;
 
 private:
     std::string sequence_;

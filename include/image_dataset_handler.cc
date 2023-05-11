@@ -17,6 +17,18 @@ Dataset_Handler::Dataset_Handler(const std::string &dataset_path, const std::str
     first_right_image_ = cv::imread(sequence_ + "/image_1/000000.png", cv::IMREAD_GRAYSCALE);
     img_width_ = first_left_image_.rows;
     img_height_ = first_left_image_.cols;
+
+    // Count number of frames
+    std::string img_dir = sequence_ + "/image_0/";
+    int count = 0;
+    for (const auto &entry : std::filesystem::directory_iterator(img_dir))
+    {
+        if (entry.is_regular_file())
+        {
+            count++;
+        }
+    }
+    num_frames_ = count;
 }
 
 bool Dataset_Handler::initDataSet()
@@ -70,4 +82,41 @@ void Dataset_Handler::getProjectionMatrix(const std::string projection, cv::Matx
 void Dataset_Handler::getTranslationMatrix(const std::string projection, cv::Matx34d &matrix)
 {
     getProjectionMatrix(projection, matrix);
+}
+
+std::pair<cv::Mat, cv::Mat> Dataset_Handler::operator++()
+{
+    // increment current frame number
+    current_frame_++;
+    if (current_frame_ >= num_frames_)
+    {
+        std::cerr << "Error: reached end of sequence" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // load new left and right images
+    std::ostringstream filename;
+    filename << std::setfill('0') << std::setw(6) << current_frame_;
+    std::string left_img_path = sequence_ + "/image_0/" + filename.str() + ".png";
+    std::string right_img_path = sequence_ + "/image_1/" + filename.str() + ".png";
+    cv::Mat left_img = cv::imread(left_img_path, cv::IMREAD_GRAYSCALE);
+    cv::Mat right_img = cv::imread(right_img_path, cv::IMREAD_GRAYSCALE);
+    return std::make_pair(left_img, right_img);
+}
+
+std::pair<cv::Mat, cv::Mat> Dataset_Handler::nextFrame()
+{
+    current_frame_++;
+    if (current_frame_ >= num_frames_)
+    {
+        std::cerr << "Error: reached end of sequence" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::ostringstream filename;
+    filename << std::setfill('0') << std::setw(6) << current_frame_;
+    std::string left_img_path = sequence_ + "/image_0/" + filename.str() + ".png";
+    std::string right_img_path = sequence_ + "/image_1/" + filename.str() + ".png";
+    cv::Mat left_img = cv::imread(left_img_path, cv::IMREAD_GRAYSCALE);
+    cv::Mat right_img = cv::imread(right_img_path, cv::IMREAD_GRAYSCALE);
+    return std::make_pair(left_img, right_img);
 }
