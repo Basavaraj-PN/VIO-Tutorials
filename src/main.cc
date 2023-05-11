@@ -106,7 +106,7 @@ cv::Mat stereo_to_depth(cv::Mat &left_image, cv::Mat &right_image,
     return stereo_depth;
 }
 
-std::tuple<std::vector<cv::KeyPoint>, cv::Mat> extract_features(cv::Mat image, std::string detector = "sift", cv::Mat mask = cv::Mat())
+std::tuple<std::vector<cv::KeyPoint>, cv::Mat> extract_features(cv::Mat image, std::string detector = "orb", cv::Mat mask = cv::Mat())
 {
     std::vector<cv::KeyPoint> kp;
     cv::Mat des;
@@ -141,7 +141,7 @@ cv::Mat mask(cv::Mat image)
     return mask;
 }
 
-std::vector<std::vector<cv::DMatch>> match_features(cv::Mat des1, cv::Mat des2, std::string matching = "BF", std::string detector = "sift", bool sort = true, int k = 2)
+std::vector<std::vector<cv::DMatch>> match_features(cv::Mat des1, cv::Mat des2, std::string matching = "BF", std::string detector = "orb", bool sort = true, int k = 2)
 {
     std::vector<std::vector<cv::DMatch>> matches;
     if (matching == "BF")
@@ -186,12 +186,31 @@ filter_matches_distance(std::vector<std::vector<cv::DMatch>> matches, float dist
     return filtered_match;
 }
 
-cv::Mat visualize_matches(cv::Mat image1, std::vector<cv::KeyPoint> kp1, cv::Mat image2, std::vector<cv::KeyPoint> kp2, std::vector<cv::DMatch> match)
+cv::Mat visualize_matches(cv::Mat image1, std::vector<cv::KeyPoint> kp1, cv::Mat image2,
+                          std::vector<cv::KeyPoint> kp2, std::vector<std::vector<cv::DMatch>> matches)
 {
     cv::Mat image_matches;
-    cv::drawMatches(image1, kp1, image2, kp2, match, image_matches, cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+    std::vector<cv::DMatch> matches_;
+
+    // Iterate over all matches and filter out the good matches
+    for (size_t i = 0; i < matches.size(); i++)
+    {
+        matches_.push_back(matches[i][0]);
+    }
+    cv::drawMatches(image1, kp1, image2, kp2, matches_, image_matches, cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+
     return image_matches;
 }
+
+cv::Mat visualize_matches(cv::Mat image1, std::vector<cv::KeyPoint> kp1, cv::Mat image2,
+                          std::vector<cv::KeyPoint> kp2, std::vector<cv::DMatch> matches)
+{
+    cv::Mat image_matches;
+    cv::drawMatches(image1, kp1, image2, kp2, matches, image_matches, cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+
+    return image_matches;
+}
+
 int main()
 {
     const std::string dataset_path = "/media/omnipotent/HDD/Dataset/data_odometry_gray/dataset";
@@ -200,20 +219,25 @@ int main()
     cv::Mat stereo_depth = stereo_to_depth(dataset_handler.first_left_image_, dataset_handler.first_right_image_,
                                            dataset_handler.P0, dataset_handler.P1, Matcher::sgbm, true, true);
 
-    // std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature = extract_features(dataset_handler.first_left_image_);
+    std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature1 = extract_features(dataset_handler.first_left_image_);
+    auto t = dataset_handler.nextFrame();
+    std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature2 = extract_features(t.first);
 
-    // std::vector<std::vector<cv::DMatch>> matches = match_features(std::get<0>(feature),  );
+    auto matches_ = match_features(std::get<1>(feature1), std::get<1>(feature2));
 
-    // double max_val;
-    // cv::minMaxLoc(stereo_depth, nullptr, &max_val);
-    // cv::imshow("stereo_depth", stereo_depth / max_val);
-    // cv::waitKey(0);
-    // cv::Mat mask = cv::Mat::zeros(dataset_handler.first_left_image_.size(), CV_8UC1);
-    // int ymax = dataset_handler.first_left_image_.rows;
-    // int xmax = dataset_handler.first_left_image_.cols;
-    // cv::rectangle(mask, cv::Rect(96, 0, xmax - 96, ymax), cv::Scalar(255), cv::FILLED);
-    // cv::imshow("mask", mask(dataset_handler.first_left_image_));
-    // cv::waitKey(0);
+    auto matched_feat = visualize_matches(dataset_handler.first_left_image_, std::get<0>(feature1),
+                                          t.first, std::get<0>(feature2), matches_);
+
+    cv::imshow("unfiltred", matched_feat);
+    cv::waitKey(0);
+
+    auto filtered_matches = filter_matches_distance(matches_, 0.3);
+
+    auto filtered_matches_vis = visualize_matches(dataset_handler.first_left_image_, std::get<0>(feature1),
+                                                  t.first, std::get<0>(feature2), filtered_matches);
+
+    cv::imshow("filtred", filtered_matches_vis);
+    cv::waitKey(0);
 
     return EXIT_SUCCESS;
 }
