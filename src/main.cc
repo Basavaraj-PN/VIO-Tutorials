@@ -247,7 +247,7 @@ int main()
         std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature1 = extract_features(current_image);
         std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature2 = extract_features(left_image);
         auto matches_ = match_features(std::get<1>(feature1), std::get<1>(feature2));
-        auto filtered_matches = filter_matches_distance(matches_, 0.5);
+        auto filtered_matches = filter_matches_distance(matches_, 0.8);
         auto matched_feat = visualize_matches(current_image, std::get<0>(feature1),
                                               left_image, std::get<0>(feature2), filtered_matches);
 
