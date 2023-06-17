@@ -75,7 +75,7 @@ Eigen::MatrixXf pointCloudToMatrix(const PointCloudT::Ptr cloud)
     }
     return matrix;
 }
-
+// Filter redundant points
 Eigen::MatrixXf filterPointsBehindCamera(const Eigen::MatrixXf &cam_xyz)
 {
     Eigen::MatrixXf filtered_cam_xyz;
@@ -168,6 +168,8 @@ int main()
     // Display the image in an OpenCV window
     cv::imshow("Image with Pixel Coordinates", image);
     cv::waitKey(0);
+
+
     // Create a PCLVisualizer object
     // pcl::visualization::PCLVisualizer viewer("Point Cloud Viewer");
 
