@@ -162,7 +162,7 @@ int main()
     {
         int x = pixel_coordinates(0, i);
         int y = pixel_coordinates(1, i);
-        cv::circle(image, cv::Point(x, y), 2, cv::Scalar(0, 0, 255), -1);
+        cv::circle(image, cv::Point(x, y), 2, cv::Scalar(223, 97, 255), -1);
     }
 
     // Display the image in an OpenCV window
