@@ -13,7 +13,7 @@
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
 
-std::string point_cloud = "/home/omnipotent/Desktop/Desktop/vio_tutorial/resources/output.pcd";
+std::string point_cloud = "/home/omnipotent/Desktop/Desktop/VIO-Tutorials/resources/output.pcd";
 
 Eigen::Matrix<float, 3, 4> Tr;
 Eigen::Matrix<float, 3, 4> P0;
