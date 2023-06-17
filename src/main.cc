@@ -242,21 +242,21 @@ int main()
 
     auto current_image = dataset_handler.first_left_image_;
 
-    while (dataset_handler.current_frame_ < dataset_handler.num_frames_)
-    {
-        auto left_image = dataset_handler.nextFrame().first;
-        std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature1 = extract_features(current_image);
-        std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature2 = extract_features(left_image);
-        auto matches_ = match_features(std::get<1>(feature1), std::get<1>(feature2));
-        auto filtered_matches = filter_matches_distance(matches_, 0.8);
-        auto matched_feat = visualize_matches(current_image, std::get<0>(feature1),
-                                              left_image, std::get<0>(feature2), filtered_matches);
+    // while (dataset_handler.current_frame_ < dataset_handler.num_frames_)
+    // {
+    //     auto left_image = dataset_handler.nextFrame().first;
+    //     std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature1 = extract_features(current_image);
+    //     std::tuple<std::vector<cv::KeyPoint>, cv::Mat> feature2 = extract_features(left_image);
+    //     auto matches_ = match_features(std::get<1>(feature1), std::get<1>(feature2));
+    //     auto filtered_matches = filter_matches_distance(matches_, 0.8);
+    //     auto matched_feat = visualize_matches(current_image, std::get<0>(feature1),
+    //                                           left_image, std::get<0>(feature2), filtered_matches);
 
-        cv::imshow("unfiltred", matched_feat);
-        cv::waitKey(10);
+    //     cv::imshow("unfiltred", matched_feat);
+    //     cv::waitKey(10);
 
-        current_image = left_image;
-    }
+    //     current_image = left_image;
+    // }
 
     return EXIT_SUCCESS;
 }
