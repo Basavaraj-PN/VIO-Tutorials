@@ -2,7 +2,7 @@
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>  
+#include <opencv2/imgproc.hpp>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
@@ -152,23 +152,27 @@ int main()
     // Turn projection points into integers for indexing
     Eigen::MatrixXi pixel_coordinates = projection.cast<int>().topLeftCorner(2, projection.cols()).array().round();
 
+    // Extract the pixel coordinates from the projection matrix
+    // Eigen::MatrixXi pixel_coordinates = projection.topRows(2).cast<int>();
+
     // Limit pixel coordinates considered to those that fit on the image plane
-    Eigen::Array<bool, Eigen::Dynamic, 1> indices = ((pixel_coordinates.col(0).array() < imwidth) &&
-                                                     (pixel_coordinates.col(0).array() >= 0) &&
-                                                     (pixel_coordinates.col(1).array() < imheight) &&
-                                                     (pixel_coordinates.col(1).array() >= 0));
+    Eigen::Array<bool, Eigen::Dynamic, 1> indices = ((pixel_coordinates.row(0).array() < imwidth) &&
+                                                     (pixel_coordinates.row(0).array() >= 0) &&
+                                                     (pixel_coordinates.row(1).array() < imheight) &&
+                                                     (pixel_coordinates.row(1).array() >= 0));
 
-    for (int i = 0; i < pixel_coordinates.cols(); ++i)
+    for (int i = 0; i < indices.size(); ++i)
     {
-        int x = pixel_coordinates(0, i);
-        int y = pixel_coordinates(1, i);
-        cv::circle(image, cv::Point(x, y), 2, cv::Scalar(223, 97, 255), -1);
+        if (indices(i))
+        {
+            int x = pixel_coordinates(0, i);
+            int y = pixel_coordinates(1, i);
+            cv::circle(image, cv::Point(x, y), 2, cv::Scalar(0, 0, 255), -1);
+        }
     }
-
     // Display the image in an OpenCV window
     cv::imshow("Image with Pixel Coordinates", image);
     cv::waitKey(0);
-
 
     // Create a PCLVisualizer object
     // pcl::visualization::PCLVisualizer viewer("Point Cloud Viewer");
